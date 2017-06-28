@@ -77,7 +77,7 @@ class Thread
      */
     protected function setTitle(string $title)
     {
-        validate($title, 'max:255');
+        validate($title, 'min:3|max:255');
 
         $this->title = $title;
 
@@ -103,7 +103,7 @@ class Thread
      */
     protected function setBody(string $body)
     {
-        validate($body, 'max:255');
+        validate($body, 'min:3|max:255');
         
         $this->body = $body;
 

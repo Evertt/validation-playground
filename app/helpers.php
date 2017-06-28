@@ -1,6 +1,8 @@
 <?php
 
-use App\Helpers\ObjectNormalizer;
+// use App\Helpers\ObjectNormalizer;
+use Illuminate\Support\MessageBag;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use App\Exceptions\ValidationException;
 use Symfony\Component\Serializer\Serializer;
 
@@ -26,9 +28,14 @@ if (! function_exists('validate')) {
         
         $validator = Validator::make($value, $rules, $messages);
 
-        if ($validator->fails()) {
+        if ($validator->passes()) return;
+
+        if (!config('_save_validation_errors_')) {
             throw new ValidationException($validator->errors());
         }
+
+        $errors = config('_saved_validation_errors_', new MessageBag);
+        config(['_saved_validation_errors_' => $errors->merge($validator->errors())]);
     }
 }
 
@@ -72,10 +79,24 @@ if (! function_exists('make')) {
      */
     function make($entity, array $data)
     {
+        $context    = [];
         $normalizer = new ObjectNormalizer();
         $serializer = new Serializer([$normalizer], []);
+
+        if (!is_string($entity)) {
+            $context = ['object_to_populate' => $entity];
+            $entity  = get_class($entity);
+        }
         
-        return $serializer->denormalize($data, $entity);
+        config(['_save_validation_errors_' => true]);
+
+        $entity = $serializer->denormalize($data, $entity, null, $context);
+
+        config(['_save_validation_errors_' => false]);
+
+        $errors = config('_saved_validation_errors_', new MessageBag);
+
+        if ($errors->any()) throw new ValidationException($errors);
     }
 }
 
