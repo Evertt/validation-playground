@@ -3,7 +3,7 @@
 namespace App\Validation;
 
 use Validator as LaravelValidator;
-use App\Exceptions\ValidationException;
+use Illuminate\Validation\ValidationException;
 
 class Validator
 {
@@ -36,7 +36,7 @@ class Validator
         $validator = LaravelValidator::make($this->data, $rules, $messages);
 
         if ($validator->fails()) {
-            throw new ValidationException($validator->errors());
+            throw new ValidationException($validator);
         }
     }
 
@@ -54,7 +54,7 @@ class Validator
         );
 
         if ($validator->fails()) {
-            throw new ValidationException($validator->errors());
+            throw new ValidationException($validator);
         }
 
         $this->saveDontThrow = false;
