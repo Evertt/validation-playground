@@ -72,7 +72,8 @@ class Handler extends ExceptionHandler
         }
 
         $exception = new Exception(
-            join("\n", $e->validator->errors()->all())
+            join("\n", $e->validator->errors()->all()),
+            $e->getCode(), $e
         );
 
         return config('app.debug')
