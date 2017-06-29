@@ -1,6 +1,8 @@
 <?php
 
 // use App\Helpers\ObjectNormalizer;
+use App\Validation\Validator;
+use App\Validation\ValidatorFactory;
 use Illuminate\Support\MessageBag;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use App\Exceptions\ValidationException;
@@ -26,16 +28,8 @@ if (! function_exists('validate')) {
             $rules = [$field => $rules];
         }
         
-        $validator = Validator::make($value, $rules, $messages);
-
-        if ($validator->passes()) return;
-
-        if (!config('_save_validation_errors_')) {
-            throw new ValidationException($validator->errors());
-        }
-
-        $errors = config('_saved_validation_errors_', new MessageBag);
-        config(['_saved_validation_errors_' => $errors->merge($validator->errors())]);
+        $entity = debug_backtrace()[1]['object'];
+        ValidatorFactory::make($entity)->validate($value, $rules, $messages);
     }
 }
 
@@ -79,24 +73,23 @@ if (! function_exists('make')) {
      */
     function make($entity, array $data)
     {
-        $context    = [];
-        $normalizer = new ObjectNormalizer();
-        $serializer = new Serializer([$normalizer], []);
+        $context = [];
 
         if (!is_string($entity)) {
             $context = ['object_to_populate' => $entity];
             $entity  = get_class($entity);
         }
         
-        config(['_save_validation_errors_' => true]);
+        ValidatorFactory::makeAndForget(
+            function() use ($data, $entity, $context) {
+                $normalizer = new ObjectNormalizer();
+                $serializer = new Serializer([$normalizer], []);
 
-        $entity = $serializer->denormalize($data, $entity, null, $context);
+                $entity = $serializer->denormalize($data, $entity, null, $context);
 
-        config(['_save_validation_errors_' => false]);
-
-        $errors = config('_saved_validation_errors_', new MessageBag);
-
-        if ($errors->any()) throw new ValidationException($errors);
+                ValidatorFactory::make($entity)->throwErrors();
+            }, true
+        );
     }
 }
 
