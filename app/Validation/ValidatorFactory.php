@@ -35,10 +35,10 @@ class ValidatorFactory
 
         $cb();
 
-        foreach(array_pull(static::$stack) as $key) {
+        foreach(array_pop(static::$stack) as $key) {
             app()->forgetInstance($key);
         }
 
-        array_pull(static::$saves);
+        array_pop(static::$saves);
     }
 }
