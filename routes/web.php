@@ -1,5 +1,7 @@
 <?php
 
+use App\Entities as Entity;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -12,14 +14,18 @@
 */
 
 Route::get('/', function () {
-    $thread = EntityManager::find(App\Entities\Thread::class, 1);
+    $user = make(Entity\User::class, [
+        'name' => '',
+        'email' => 'b',
+        'password' => 'c'
+    ]);
 
-    update($thread, ['title' => 'p', 'body' => 'a']);
-
-    dd($thread);
+    dd($user);
 
     return view('welcome');
 });
+
+Route::get('test')->middleware('auth');
 
 Auth::routes();
 

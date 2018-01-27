@@ -33,12 +33,14 @@ class ValidatorFactory
         static::$stack[] = [];
         static::$saves[] = $holdErrors;
 
-        $cb();
+        $returnValue = $cb();
 
         foreach(array_pop(static::$stack) as $key) {
             app()->forgetInstance($key);
         }
 
         array_pop(static::$saves);
+
+        return $returnValue;
     }
 }

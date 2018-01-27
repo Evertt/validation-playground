@@ -80,7 +80,7 @@ if (! function_exists('make')) {
             $entity  = get_class($entity);
         }
         
-        ValidatorFactory::makeAndForget(
+        return ValidatorFactory::makeAndForget(
             function() use ($data, $entity, $context) {
                 $normalizer = new ObjectNormalizer();
                 $serializer = new Serializer([$normalizer], []);
@@ -88,6 +88,8 @@ if (! function_exists('make')) {
                 $entity = $serializer->denormalize($data, $entity, null, $context);
 
                 ValidatorFactory::make($entity)->throwErrors();
+
+                return $entity;
             }, true
         );
     }
