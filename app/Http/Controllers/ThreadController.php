@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use EntityManager as EM;
 use App\Entities\Thread;
 use Illuminate\Http\Request;
 use App\Repositories\ThreadRepository;
@@ -11,13 +10,28 @@ use App\Transformers\ThreadTransformer;
 class ThreadController extends Controller
 {
     /**
+     * @var ThreadRepository
+     */
+    protected $threadsRepo;
+
+    /**
+     * ThreadController constructor.
+     * @param ThreadRepository $threadsRepo
+     */
+    public function __construct(ThreadRepository $threadsRepo)
+    {
+        $this->threadsRepo = $threadsRepo;
+    }
+
+
+    /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(ThreadRepository $threads)
+    public function index()
     {
-        $threads = $threads->findAll();
+        $threads = $this->threadsRepo->findAll();
         
         return fractal($threads, new ThreadTransformer)
             ->includeUser()->includeReplies();
@@ -27,13 +41,12 @@ class ThreadController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @throws \Doctrine\ORM\OptimisticLockException
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
-        $thread = create(Thread::class, $request->all());
-
-        EM::persist($thread);
+        $this->threadsRepo->add($request->all());
     }
 
     /**
@@ -44,7 +57,8 @@ class ThreadController extends Controller
      */
     public function show(Thread $thread)
     {
-        return fractal($thread, new ThreadTransformer)->includeUser()->includeReplies();
+        return fractal($thread, new ThreadTransformer)
+            ->includeUser()->includeReplies();
     }
 
     /**
@@ -52,25 +66,23 @@ class ThreadController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  Thread  $thread
+     * @throws \Doctrine\ORM\OptimisticLockException
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Thread $thread)
     {
-        update($thread, $request->all());
-
-        EM::flush();
+        $this->threadsRepo->update($thread, $request->all());
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param  Thread  $thread
+     * @throws \Doctrine\ORM\OptimisticLockException
      * @return \Illuminate\Http\Response
      */
     public function destroy(Thread $thread)
     {
-        EM::remove($thread);
-
-        EM::flush();
+        $this->threadsRepo->remove($thread);
     }
 }

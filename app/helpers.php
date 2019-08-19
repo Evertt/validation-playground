@@ -1,12 +1,6 @@
 <?php
 
-// use App\Helpers\ObjectNormalizer;
-use App\Validation\Validator;
 use App\Validation\ValidatorFactory;
-use Illuminate\Support\MessageBag;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use App\Exceptions\ValidationException;
-use Symfony\Component\Serializer\Serializer;
 
 if (! function_exists('validate')) {
     /**
@@ -16,8 +10,6 @@ if (! function_exists('validate')) {
      * @param  mixed  $rules
      * @param  array  $messages
      * @return void
-     *
-     * @throws ValidationException
      */
     function validate($value, $rules, array $messages = [])
     {
@@ -59,69 +51,6 @@ if (! function_exists('get_argument_name')) {
         if (!starts_with($argument, '$')) return false;
 
         return ltrim($argument, '$');
-    }
-}
-
-if (! function_exists('make')) {
-    /**
-     * Makes an entity with some data.
-     *
-     * @param  string|object        $entity  The entity
-     * @param  array                $data    The data
-     *
-     * @throws ValidationException
-     */
-    function make($entity, array $data)
-    {
-        $context = [];
-
-        if (!is_string($entity)) {
-            $context = ['object_to_populate' => $entity];
-            $entity  = get_class($entity);
-        }
-        
-        return ValidatorFactory::makeAndForget(
-            function() use ($data, $entity, $context) {
-                $normalizer = new ObjectNormalizer();
-                $serializer = new Serializer([$normalizer], []);
-
-                $entity = $serializer->denormalize($data, $entity, null, $context);
-
-                ValidatorFactory::make($entity)->throwErrors();
-
-                return $entity;
-            }, true
-        );
-    }
-}
-
-if (! function_exists('update')) {
-    /**
-     * Updates an entity with some data.
-     *
-     * @param  string|object        $entity  The entity
-     * @param  array                $data    The data
-     *
-     * @throws ValidationException
-     */
-    function update($entity, array $data)
-    {
-        return make($entity, $data);
-    }
-}
-
-if (! function_exists('classes_in_namespace')) {
-    /**
-     * Get all classes inside a certain namespace.
-     *
-     * @param  string    $namespace
-     * @return string[]
-     */
-    function classes_in_namespace(string $namespace)
-    {
-        $a = include base_path('vendor/autoload.php');
-
-        dd($a);
     }
 }
 
